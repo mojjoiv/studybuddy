@@ -1,9 +1,19 @@
 import { create, all } from "mathjs";
-import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { ChatGroq } from "@langchain/groq";
+
 import { vectorSearch } from "./retrievalService.js";
 
 const math = create(all, { number: "number", matrix: "Array" });
-const llm = new ChatOpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-4o-mini", temperature: 0.2 });
+
+const llm = new ChatGroq({
+  apiKey: process.env.GROQ_API_KEY || "HARDCODED_KEY_FOR_TESTING",
+  model: "llama3-8b-8192", // free model
+  temperature: 0.2
+});
+// const emb = new GroqEmbeddings({ apiKey: process.env.GROQ_API_KEY });
+
+// const llm = new ChatOpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-4o-mini", temperature: 0.2 });
 const emb = new OpenAIEmbeddings({ apiKey: process.env.OPENAI_API_KEY });
 
 // Very simple: ask LLM to produce JSON steps with optional calc expressions for primary-level problems.

@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
-import { ChatOpenAI } from "@langchain/openai";
+// import { ChatOpenAI } from "@langchain/openai";
+import { ChatGroq } from "@langchain/groq";
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import fetch from 'node-fetch';
@@ -45,21 +46,24 @@ app.get("/", (_, res) => res.json({
 
 app.get("/test-stream", async (req, res) => {
   try {
-    const model = new ChatOpenAI({
-      modelName: "gpt-3.5-turbo",
-      streaming: true,
-      temperature: 0.7,
-      configuration: {
-        basePath: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1"
-      }
-    });
+    const model = new ChatGroq({
+        model: "llama3-8b-8192",
+        streaming: true,
+        temperature: 0.7,
+        apiKey: process.env.GROQ_API_KEY
+      });
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    const stream = await model.stream("Tell me a short fact about computer science.");
-    
+    let output = "";
+    const stream = await model.stream("Give me a fun fact about computer science.");
+    for await (const chunk of stream) {
+      if (chunk.content) output += chunk.content;
+    } 
+    res.json({ answer: output });  
+      
     let buffer = "";
     for await (const chunk of stream) {
       buffer += chunk.content;

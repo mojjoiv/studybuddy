@@ -1,8 +1,16 @@
-import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { ChatGroq } from "@langchain/groq";
 import { vectorSearch } from "./retrievalService.js";
 import { solveStem } from "./stemService.js";
 
-const llm = new ChatOpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-4o-mini", temperature: 0.3 });
+const llm = new ChatGroq({
+  apiKey: process.env.GROQ_API_KEY || "HARDCODED_KEY_FOR_TESTING",
+  model: "llama3-8b-8192",
+  temperature: 0.3
+});
+// const emb = new GroqEmbeddings({ apiKey: process.env.GROQ_API_KEY });
+
+// const llm = new ChatOpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-4o-mini", temperature: 0.3 });
 const emb = new OpenAIEmbeddings({ apiKey: process.env.OPENAI_API_KEY });
 
 const styleInstruction = (preferences) => {
