@@ -30,10 +30,10 @@ dotenv.config({ path: join(__dirname, '.env') });
 
 // 🚨 Development fallback keys (only for local dev, do not use in prod)
 if (!process.env.GROQ_API_KEY) {
-  process.env.GROQ_API_KEY = "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";
+  process.env.GROQ_API_KEY = "YOUR_HARDCODED_GROQ_KEY_HERE";
 }
 if (!process.env.HF_API_KEY) {
-  process.env.HF_API_KEY = "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";
+  process.env.HF_API_KEY = "YOUR_HARDCODED_HF_KEY_HERE";
 }
 
 console.log("Loaded GROQ key:", process.env.GROQ_API_KEY ? "✅ Found" : "❌ Missing");
