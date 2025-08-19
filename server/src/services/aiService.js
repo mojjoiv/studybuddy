@@ -1,17 +1,18 @@
-import { OpenAIEmbeddings } from "@langchain/openai";
 import { ChatGroq } from "@langchain/groq";
+import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
 import { vectorSearch } from "./retrievalService.js";
 import { solveStem } from "./stemService.js";
 
 const llm = new ChatGroq({
-  apiKey: process.env.GROQ_API_KEY || "HARDCODED_KEY_FOR_TESTING",
+  apiKey: process.env.GROQ_API_KEY,
   model: "llama3-8b-8192",
   temperature: 0.3
 });
-// const emb = new GroqEmbeddings({ apiKey: process.env.GROQ_API_KEY });
 
-// const llm = new ChatOpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-4o-mini", temperature: 0.3 });
-const emb = new OpenAIEmbeddings({ apiKey: process.env.OPENAI_API_KEY });
+// Replace OpenAI embeddings with HuggingFace
+const emb = new HuggingFaceTransformersEmbeddings({
+  model: "Xenova/all-MiniLM-L6-v2" // lightweight embeddings model
+});
 
 const styleInstruction = (preferences) => {
   const learn = preferences?.learningStyle === "visual"
@@ -24,10 +25,11 @@ const styleInstruction = (preferences) => {
 
 export const askGroundedPrimary = async ({ question, subject, grade, preferences }) => {
   // If simple math/physics/chemistry, delegate to stem solver (lightweight)
-  if (["math","science"].includes(subject)) {
-    // for primary we pass simple filters
+  if (["math", "science"].includes(subject)) {
     const solved = await solveStem(question, { subject, grade });
-    const stepsOut = solved.steps.map((s,i)=> `Step ${i+1}: ${s.explain}${s.value!==undefined?`\n  Value: ${s.value}`:""}`).join("\n");
+    const stepsOut = solved.steps
+      .map((s, i) => `Step ${i + 1}: ${s.explain}${s.value !== undefined ? `\n  Value: ${s.value}` : ""}`)
+      .join("\n");
     return `${stepsOut}\n\nFinal: ${solved.final}`;
   }
 

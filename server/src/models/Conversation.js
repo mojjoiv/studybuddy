@@ -1,7 +1,8 @@
+// models/Conversation.js
 import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema({
-  role: { type: String, enum: ["student","ai"], required: true },
+  role: { type: String, enum: ["student", "ai"], required: true },
   content: { type: String, required: true },
   externalLinks: [String],
   timestamp: { type: Date, default: Date.now }
@@ -9,7 +10,7 @@ const messageSchema = new mongoose.Schema({
 
 const conversationSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  subject: String,
+  subject: { type: String, required: true },
   messages: [messageSchema],
   startedAt: { type: Date, default: Date.now },
   endedAt: Date
