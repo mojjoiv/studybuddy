@@ -7,9 +7,9 @@ const messageSchema = new mongoose.Schema({
   externalLinks: [String],
   source: {
     type: String,
-    enum: ["stem", "book", "internet", "none"],
+    enum: ["stem", "book", "internet", "none", "error"],
     default: "none",
-  }, // ✅ track where AI answer came from
+  }, // ✅ track where the answer came from
   timestamp: { type: Date, default: Date.now },
 });
 

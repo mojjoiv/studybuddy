@@ -35,15 +35,21 @@ const emb = new HuggingFaceInferenceEmbeddings({
   model: "sentence-transformers/all-MiniLM-L6-v2",
 });
 
-// Instruction builder
-const styleInstruction = (preferences) => {
+// Instruction builder (✅ now uses student's name)
+const styleInstruction = (preferences, name) => {
   const learn =
     preferences?.learningStyle === "visual"
       ? "Offer an analogy or describe a simple drawing."
       : preferences?.learningStyle === "step_by_step"
       ? "Break into small numbered steps."
       : "";
-  return ["Explain simply and kindly for children.", learn]
+
+  const studentName = name || "young learner"; // fallback if no name found
+
+  return [
+    `Explain simply and kindly for children. Address the student by their name (${studentName}) instead of generic terms like 'young explorers'.`,
+    learn,
+  ]
     .filter(Boolean)
     .join(" ");
 };
@@ -54,6 +60,7 @@ export const askGroundedPrimary = async ({
   subject,
   grade,
   preferences,
+  name, // ✅ added name
 }) => {
   try {
     // 1. STEM fast-solver
@@ -90,7 +97,8 @@ export const askGroundedPrimary = async ({
         const system = {
           role: "system",
           content: `${styleInstruction(
-            preferences
+            preferences,
+            name
           )} Use only the provided textbook excerpts to answer. Excerpts:\n${context}`,
         };
         const ai = await llm.invoke([system, { role: "user", content: question }]);
@@ -105,7 +113,10 @@ export const askGroundedPrimary = async ({
       const ai = await llm.invoke([
         {
           role: "system",
-          content: `${styleInstruction(preferences)} Answer from your general knowledge.`,
+          content: `${styleInstruction(
+            preferences,
+            name
+          )} Answer from your general knowledge.`,
         },
         { role: "user", content: question },
       ]);

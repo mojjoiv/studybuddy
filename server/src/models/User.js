@@ -4,6 +4,11 @@ const historySchema = new mongoose.Schema({
   question: String,
   answer: String,
   subject: String,
+  source: {
+    type: String,
+    enum: ["stem", "book", "internet", "none", "error"],
+    default: "none"
+  },
   correct: { type: Boolean, default: null },
   createdAt: { type: Date, default: Date.now }
 });

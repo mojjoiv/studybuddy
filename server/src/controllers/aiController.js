@@ -43,9 +43,16 @@ export const ask = async (req, res) => {
         subject: conversation.subject,
         grade: user.grade,
         preferences: user.preferences || {},
+        name: user.name, // ✅ pass student's name
       });
+
       answer = result.answer;
-      source = result.source; // ✅ capture source
+      source = result.source;
+
+      // ✅ Safety fallback: prepend name if model didn’t naturally use it
+      if (answer && user.name && !answer.includes(user.name)) {
+        answer = `Hi ${user.name}! 👋\n\n${answer}`;
+      }
     } catch (err) {
       console.error("AI Service failed:", err.message);
       return res
@@ -75,7 +82,7 @@ export const ask = async (req, res) => {
             role: "ai",
             content: answer,
             externalLinks: links,
-            source, // ✅ persist source in conversation messages
+            source,
           },
         ],
       },
@@ -93,7 +100,7 @@ export const ask = async (req, res) => {
     res.json({
       sessionId: conversation._id,
       answer,
-      source, // ✅ return source to client
+      source,
       externalLinks: links,
       externalLinkTriggered: links.length > 0,
     });
