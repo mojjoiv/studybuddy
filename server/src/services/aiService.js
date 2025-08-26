@@ -1,17 +1,35 @@
+// Load environment variables first
+import { config } from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+config({ path: join(__dirname, '../../.env') }); // Adjust path based on your structure
+
 import { ChatGroq } from "@langchain/groq";
 import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
 import { vectorSearch } from "./retrievalService.js";
 import { solveStem } from "./stemService.js";
 
+// Temporary hardcoded keys for testing - REMOVE LATER
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const HF_API_KEY = process.env.HF_API_KEY;
+
+// Debug: Check if API key is loaded
+console.log('Groq API Key present:', !!process.env.GROQ_API_KEY);
+console.log('HF API Key present:', !!process.env.HF_API_KEY);
+
 const llm = new ChatGroq({
-  apiKey: process.env.GROQ_API_KEY,
+  apiKey: GROQ_API_KEY,
   model: "llama3-8b-8192",
   temperature: 0.3
 });
 
-// Replace OpenAI embeddings with HuggingFace
-const emb = new HuggingFaceTransformersEmbeddings({
-  model: "Xenova/all-MiniLM-L6-v2" // lightweight embeddings model
+// Corrected: Use HuggingFaceInferenceEmbeddings with API key
+const emb = new HuggingFaceInferenceEmbeddings({
+  apiKey: HF_API_KEY, // Add API key
+  model: "sentence-transformers/all-MiniLM-L6-v2" // Fixed model name
 });
 
 const styleInstruction = (preferences) => {
