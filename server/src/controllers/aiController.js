@@ -1,3 +1,5 @@
+// src/controllers/aiController.js
+
 import { askGroundedPrimary } from "../services/aiService.js";
 import Conversation from "../models/Conversation.js";
 import { extractLinks } from "../utils/links.js";
@@ -12,31 +14,55 @@ export const ask = async (req, res) => {
       return res.status(400).json({ error: "question is required" });
     }
 
-    // if sessionId not provided, create one automatically
+    // If sessionId not provided, create new session
     let conversation;
     if (!sessionId) {
       if (!subject) {
-        return res.status(400).json({ error: "Either provide sessionId or subject to start a new session" });
+        return res.status(400).json({
+          error: "Either provide sessionId or subject to start a new session",
+        });
       }
       conversation = await Conversation.create({
         userId: user._id,
         subject,
-        messages: []
+        messages: [],
       });
     } else {
       conversation = await Conversation.findById(sessionId);
       if (!conversation) {
-        return res.status(404).json({ error: "Conversation not found" });
+        return res.status(404).json({
+          error: "Conversation not found. Please start a new session.",
+        });
       }
     }
 
-    // Ensure grade from user is used for grounding
-    const answer = await askGroundedPrimary({
-      question,
-      subject: conversation.subject,
-      grade: user.grade,
-      preferences: user.preferences || {}
-    });
+    let answer, source;
+    try {
+      const result = await askGroundedPrimary({
+        question,
+        subject: conversation.subject,
+        grade: user.grade,
+        preferences: user.preferences || {},
+      });
+      answer = result.answer;
+      source = result.source; // ✅ capture source
+    } catch (err) {
+      console.error("AI Service failed:", err.message);
+      return res
+        .status(500)
+        .json({ error: "AI service failed. Please try again later." });
+    }
+
+    if (!answer) {
+      return res.status(200).json({
+        sessionId: conversation._id,
+        answer:
+          "I couldn’t generate an answer right now. Please try again.",
+        source: "none",
+        externalLinks: [],
+        externalLinkTriggered: false,
+      });
+    }
 
     const links = extractLinks(answer);
 
@@ -45,22 +71,34 @@ export const ask = async (req, res) => {
       $push: {
         messages: [
           { role: "student", content: question, externalLinks: [] },
-          { role: "ai", content: answer, externalLinks: links }
-        ]
-      }
+          {
+            role: "ai",
+            content: answer,
+            externalLinks: links,
+            source, // ✅ persist source in conversation messages
+          },
+        ],
+      },
     });
 
     // Save history for quick student feedback
-    user.history.push({ question, answer, subject: conversation.subject });
+    user.history.push({
+      question,
+      answer,
+      subject: conversation.subject,
+      source,
+    });
     await user.save();
 
     res.json({
       sessionId: conversation._id,
       answer,
+      source, // ✅ return source to client
       externalLinks: links,
-      externalLinkTriggered: links.length > 0
+      externalLinkTriggered: links.length > 0,
     });
   } catch (e) {
+    console.error("Ask controller error:", e.message);
     res.status(500).json({ error: e.message });
   }
 };

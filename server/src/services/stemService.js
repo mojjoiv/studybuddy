@@ -1,5 +1,6 @@
 import { create, all } from "mathjs";
-import { OpenAIEmbeddings } from "@langchain/openai";
+// import { OpenAIEmbeddings } from "@langchain/openai";
+import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
 import { ChatGroq } from "@langchain/groq";
 
 import { vectorSearch } from "./retrievalService.js";
@@ -14,7 +15,7 @@ const llm = new ChatGroq({
 // const emb = new GroqEmbeddings({ apiKey: process.env.GROQ_API_KEY });
 
 // const llm = new ChatOpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-4o-mini", temperature: 0.2 });
-const emb = new OpenAIEmbeddings({ apiKey: process.env.OPENAI_API_KEY });
+const emb = new HuggingFaceInferenceEmbeddings({ apiKey: process.env.HF_API_KEY });
 
 // Very simple: ask LLM to produce JSON steps with optional calc expressions for primary-level problems.
 export const solveStem = async (question, filters) => {
