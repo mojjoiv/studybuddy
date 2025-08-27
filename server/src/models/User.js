@@ -17,20 +17,38 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ["student","admin"], default: "student" },
+
+  // roles: student, admin, superadmin
+  role: { 
+    type: String, 
+    enum: ["student", "admin", "superadmin"], 
+    default: "student" 
+  },
 
   // primary-specific
   level: { type: String, enum: ["primary"], default: "primary" },
-  grade: { type: String, required: true }, // e.g., "Grade 4"
+  grade: { type: String, required: function () { return this.role === "student"; } }, // only required for students
   parentEmail: { type: String },
   teacherEmail: { type: String },
 
   preferences: {
-    learningStyle: { type: String, enum: ["visual","textual","step_by_step"], default: "step_by_step" }
+    learningStyle: { 
+      type: String, 
+      enum: ["visual","textual","step_by_step"], 
+      default: "step_by_step" 
+    }
   },
 
   history: [historySchema],
-  weakAreas: [{ subject: String, topic: String, mistakes: { type: Number, default: 0 } }],
+
+  weakAreas: [
+    { 
+      subject: String, 
+      topic: String, 
+      mistakes: { type: Number, default: 0 } 
+    }
+  ],
+
   createdAt: { type: Date, default: Date.now }
 });
 
